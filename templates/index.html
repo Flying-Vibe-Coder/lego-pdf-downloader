@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEGO Instructions Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: 
+                linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+                var(--bg-image);
+            background-size: 98%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-color: #000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Mobile-specific background styling */
+        @media (max-width: 768px) {
+            body {
+                background-size: cover;
+                background-position: center;
+                padding: 15px;
+            }
+        }
+
+        .container {
+            background: var(--container-bg, rgba(40, 50, 80, 0.5));
+            backdrop-filter: blur(25px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            padding: 28px 32px;
+            max-width: 480px;
+            width: 100%;
+            border: 1px solid var(--container-border, rgba(255, 255, 255, 0.15));
+        }
+
+        /* Mobile-specific container styling */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 24px;
+                max-width: 100%;
+                margin: 0 auto;
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+        }
+
+        .subtitle {
+            color: #fff;
+            font-size: 13px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--btn-bg, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .status-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .status-container.active {
+            display: block;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-icon {
+            font-size: 24px;
+        }
+
+        .status-text {
+            flex: 1;
+        }
+
+        .status-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .status-message {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .download-card {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .download-card.active {
+            display: block;
+        }
+
+        .download-info {
+            margin-bottom: 15px;
+        }
+
+        .set-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .error-card {
+            background: #ffebee;
+            border: 2px solid #f44336;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-card.active {
+            display: block;
+        }
+
+        .error-message {
+            color: #c62828;
+            font-weight: 600;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinning {
+            animation: spin 2s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LEGO Instructions Downloader</h1>
+            <p class="subtitle">Download building instructions as PDF files</p>
+        </div>
+
+        <div class="input-group">
+            <label for="setNumber">LEGO Set Number</label>
+            <input 
+                type="text" 
+                id="setNumber" 
+                placeholder="e.g., 6080, 10497, 75192"
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" id="downloadBtn" onclick="startDownload()">
+                Download Instructions
+            </button>
+        </div>
+
+        <div class="status-container" id="statusContainer">
+            <div class="status-card">
+                <div class="status-header">
+                    <span class="status-icon" id="statusIcon">⏳</span>
+                    <div class="status-text">
+                        <div class="status-title" id="statusTitle">Processing...</div>
+                        <div class="status-message" id="statusMessage">Please wait</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="download-card" id="downloadCard">
+            <div class="download-info">
+                <div class="set-name" id="setName">Set Ready!</div>
+                <div class="status-message">Your PDF has been saved to Downloads</div>
+            </div>
+            <button class="download-btn" id="downloadFileBtn">
+                📄 Open PDF
+            </button>
+        </div>
+
+        <div class="error-card" id="errorCard">
+            <div class="error-message" id="errorMessage">An error occurred</div>
+        </div>
+
+    </div>
+
+    <script>
+        // Randomly select background image on page load
+        const backgrounds = [
+            {
+                image: '/static/images/pirates.jpg',
+                containerBg: 'rgba(80, 70, 60, 0.5)',
+                containerBorder: 'rgba(200, 180, 140, 0.15)',
+                btnBg: 'linear-gradient(135deg, #6b5d54 0%, #7a6b5d 100%)'
+            },
+            {
+                image: '/static/images/space.jpg',
+                containerBg: 'rgba(40, 50, 70, 0.5)',
+                containerBorder: 'rgba(100, 120, 180, 0.15)',
+                btnBg: 'linear-gradient(135deg, #3d4f6b 0%, #5d4a54 100%)'
+            },
+            {
+                image: '/static/images/forestmen.png',
+                containerBg: 'rgba(70, 60, 50, 0.5)',
+                containerBorder: 'rgba(180, 160, 120, 0.15)',
+                btnBg: 'linear-gradient(135deg, #5a6553 0%, #6b5d54 100%)'
+            }
+        ];
+        const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+        document.documentElement.style.setProperty('--bg-image', `url('${randomBg.image}')`);
+        document.documentElement.style.setProperty('--container-bg', randomBg.containerBg);
+        document.documentElement.style.setProperty('--container-border', randomBg.containerBorder);
+        document.documentElement.style.setProperty('--btn-bg', randomBg.btnBg);
+
+        let currentSetNumber = null;
+        let statusCheckInterval = null;
+
+        document.getElementById('setNumber').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startDownload();
+            }
+        });
+
+        function startDownload() {
+            const setNumber = document.getElementById('setNumber').value.trim();
+            
+            if (!setNumber) {
+                showError('Please enter a LEGO set number');
+                return;
+            }
+
+            if (!/^\d+$/.test(setNumber)) {
+                showError('Please enter a valid set number (numbers only)');
+                return;
+            }
+
+            currentSetNumber = setNumber;
+            
+            // Reset UI
+            hideAll();
+            document.getElementById('statusContainer').classList.add('active');
+            document.getElementById('downloadBtn').disabled = true;
+            document.getElementById('statusIcon').textContent = '⏳';
+            document.getElementById('statusIcon').classList.add('spinning');
+            document.getElementById('statusTitle').textContent = 'Starting...';
+            document.getElementById('statusMessage').textContent = 'Initializing download';
+            document.getElementById('progressFill').style.width = '0%';
+
+            // Start download
+            fetch('/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ set_number: setNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    // Start checking status
+                    statusCheckInterval = setInterval(checkStatus, 500);
+                }
+            })
+            .catch(error => {
+                showError('Failed to start download: ' + error.message);
+            });
+        }
+
+        function checkStatus() {
+            if (!currentSetNumber) return;
+
+            fetch(`/status/${currentSetNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    const icon = document.getElementById('statusIcon');
+                    const title = document.getElementById('statusTitle');
+                    const message = document.getElementById('statusMessage');
+                    const progress = document.getElementById('progressFill');
+
+                    if (data.status === 'complete') {
+                        clearInterval(statusCheckInterval);
+                        icon.classList.remove('spinning');
+                        icon.textContent = '✅';
+                        title.textContent = 'Complete!';
+                        message.textContent = data.message;
+                        progress.style.width = '100%';
+                        
+                        setTimeout(() => {
+                            document.getElementById('statusContainer').classList.remove('active');
+                            showDownloadCard(data.filename, data.set_name);
+                            document.getElementById('downloadBtn').disabled = false;
+                        }, 1000);
+                    } else if (data.status === 'error') {
+                        clearInterval(statusCheckInterval);
+                        icon.classList.remove('spinning');
+                        showError(data.message);
+                        document.getElementById('downloadBtn').disabled = false;
+                    } else {
+                        title.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+                        message.textContent = data.message;
+                        progress.style.width = data.progress + '%';
+                    }
+                })
+                .catch(error => {
+                    clearInterval(statusCheckInterval);
+                    showError('Status check failed: ' + error.message);
+                });
+        }
+
+        function showDownloadCard(filename, setName) {
+            document.getElementById('setName').textContent = setName || 'LEGO Instructions';
+            document.getElementById('downloadCard').classList.add('active');
+            
+            document.getElementById('downloadFileBtn').onclick = function() {
+                window.open(`/file/${filename}`, '_blank');
+            };
+        }
+
+        function showError(message) {
+            hideAll();
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorCard').classList.add('active');
+            document.getElementById('downloadBtn').disabled = false;
+            document.getElementById('statusIcon').classList.remove('spinning');
+            
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+        }
+
+        function hideAll() {
+            document.getElementById('statusContainer').classList.remove('active');
+            document.getElementById('downloadCard').classList.remove('active');
+            document.getElementById('errorCard').classList.remove('active');
+        }
+
+        function clearForm() {
+            document.getElementById('setNumber').value = '';
+            hideAll();
+            currentSetNumber = null;
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            document.getElementById('downloadBtn').disabled = false;
+        }
+    </script>
+</body>
+</html>
